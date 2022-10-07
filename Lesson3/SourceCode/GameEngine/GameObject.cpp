@@ -8,3 +8,8 @@ void GameObject::SetPosition(float x, float y, float z)
 
 	m_pRenderProxy->SetPosition(m_vPosition);
 }
+
+std::tuple<float, float, float> GameObject::GetPosition()
+{
+	return  std::make_tuple( m_vPosition[0], m_vPosition[1], m_vPosition[2]);
+}

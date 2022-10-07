@@ -30,15 +30,23 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     RenderThread* renderThread = renderEngine->GetRT();
     InputHandler* inputHandler = new InputHandler();
 
-    GameObject* cube = new CubeGameObject();
-    renderThread->EnqueueCommand(RC_CreateCubeRenderObject, cube->GetRenderProxy());
+    CubeGameObject* cubes[100]{};
+    for (int i = 0; i < 100; i++)
+    {
+        cubes[i] = new CubeGameObject();
+        cubes[i]->SetPosition((i % 10 - 4.5f) * 3, 0, (i / 10 - 4) * 3);
+        renderThread->EnqueueCommand(RC_CreateCubeRenderObject, cubes[i]->GetRenderProxy());
+    }
+    
 
     MSG msg = { 0 };
 
     timer.Start();
     timer.Reset();
 
-    float newPositionX = 0.0f;
+    float newPositionX, newPositionY, newPositionZ;
+
+    float velocityX = 0.0f, velocityY = 2.0f, velocityZ = 0.0f;
 
     // Main message loop:
     while (msg.message != (WM_QUIT | WM_CLOSE))
@@ -54,16 +62,42 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
             float t = 0;
             timer.Tick();
-            t = sin(timer.TotalTime())*2;
 
-            float velocity = 0.0f;
+            float dt = timer.DeltaTime();
             if (inputHandler->GetInputState().test(eIC_GoLeft))
-                velocity -= 1.0f;
+                velocityX = -1.0f;
             if (inputHandler->GetInputState().test(eIC_GoRight))
-                velocity += 1.0f;
-            newPositionX += velocity * timer.DeltaTime();
-            cube->SetPosition(newPositionX, 0.0f, 0.0f);
+                velocityX = 1.0f;
 
+            velocityZ = int(timer.TotalTime()) % 2 - 0.5f;
+
+            if (velocityY < -2.0f)
+                velocityY = -velocityY;
+            velocityY -= dt;
+
+            for (auto* gameObj : cubes)
+            {
+                auto t = gameObj->GetPosition();
+                newPositionX = std::get<0>(t);
+                newPositionY = std::get<1>(t);
+                newPositionZ = std::get<2>(t);
+                switch (gameObj->GetType())
+                {
+                case 0:
+                    newPositionX += velocityX * dt;
+                    break;
+                case 1:
+                    newPositionZ += velocityZ * dt;
+                    break;
+                case 2:
+                    newPositionY += velocityY * dt;
+                    break;
+                default:
+                    break;
+                }
+                
+                gameObj->SetPosition(newPositionX, newPositionY, newPositionZ);
+            }
             renderThread->OnEndFrame();
         }
     }

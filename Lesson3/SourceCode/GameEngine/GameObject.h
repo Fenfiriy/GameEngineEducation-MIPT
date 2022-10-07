@@ -14,6 +14,7 @@ public:
 	}
 
 	void SetPosition(float x, float y, float z);
+	std::tuple<float, float, float> GetPosition();
 
 	RenderProxy* const GetRenderProxy() { return m_pRenderProxy; }
 protected:
